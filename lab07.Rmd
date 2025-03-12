@@ -1,0 +1,20 @@
+---
+title: "lab07"
+output: html_document
+date: "2025-03-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+add <- function(x, y) {
+  return (x + y)
+}
+
+a <- 2
+b <- 5
+
+add(a, b)
+```
