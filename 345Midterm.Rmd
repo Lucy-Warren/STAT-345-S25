@@ -1,0 +1,90 @@
+---
+title: "STAT 345 Midterm Project"
+font: 12pt
+due: "Due April 4"
+output: 
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(devtools)
+devtools::install_github("abresler/nbastatR@aba9179ef644f263387c1536d6ddd26104d79cf4")
+```
+
+```{r}
+Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
+
+library(nbastatR)
+jazz_10 <- teams_shots(teams = "Utah Jazz", seasons = 2010)
+jazz_15 <- teams_shots(teams = "Utah Jazz", seasons = 2015)
+jazz_20 <- teams_shots(teams = "Utah Jazz", seasons = 2020)
+jazz_25 <- teams_shots(teams = "Utah Jazz", seasons = 2025)
+```
+
+```{r}
+library(ggplot2)
+
+plot_shot_chart <- function(dat, year) {
+  ggplot(data = dat, aes(x = locationX, y = locationY)) +
+    geom_point(aes(color= isShotMade), size = 0.5, alpha = 0.3) +
+    scale_color_manual(name = NULL,
+                     values = c("TRUE" = "purple", "FALSE" = "skyblue"),
+                     labels = c("Make", "Miss")) +
+    guides(color = guide_legend(override.aes = list(size = 5, alpha = 1))) +
+    # Hoop
+annotate("path", x = 7.5 * cos(seq(0, 2 * pi, length.out = 100)), 
+             y = 7.5 * sin(seq(0, 2 * pi, length.out = 100)), color = "black") +
+    # Backboard
+    annotate("segment", x = -30, xend = 30, y = -7.5, yend = -7.5, color = "black") +
+    # Outer box (paint)
+    annotate("rect", xmin = -80, xmax = 80, ymin = -47.5, ymax = 142.5, color = "black", fill = NA) +
+    # Inner box (paint)
+    annotate("rect", xmin = -60, xmax = 60, ymin = -47.5, ymax = 142.5, color = "black", fill = NA) +
+    # Free throw arcs
+    annotate("path", x = 60 * cos(seq(0, pi, length.out = 100)), y = 142.5 + 60 * sin(seq(0, pi, length.out = 100)), color = "black") +
+    annotate("path", x = 60 * cos(seq(pi, 2 * pi, length.out = 100)), y = 142.5 + 60 * sin(seq(pi, 2 * pi, length.out = 100)), color = "black", linetype = "dashed") +
+    # Restricted arc
+    annotate("path", x = 40 * cos(seq(0, pi, length.out = 100)), y = 40 * sin(seq(0, pi, length.out = 100)), color = "black") +
+    # Three-point line
+    annotate("segment", x = -220, xend = -220, y = -47.5, yend = 92.5, color = "black") +
+    annotate("segment", x = 220, xend = 220, y = -47.5, yend = 92.5, color = "black") +
+    annotate("path", x = 237.5 * cos(seq(22 * pi / 180, 158 * pi / 180, length.out = 100)), y = 237.5 * sin(seq(22 * pi / 180, 158 * pi / 180, length.out = 100)), color = "black") +
+    # Center circle
+    annotate("path", x = 60 * cos(seq(0, pi, length.out = 100)), y = 422.5 + 60 * sin(seq(pi, 2*pi, length.out = 100)), color = "black") +
+    annotate("path", x = 20 * cos(seq(0, pi, length.out = 100)), y = 422.5 + 20 * sin(seq(pi, 2*pi, length.out = 100)), color = "black") +
+    # Add the court boundary lines
+    annotate("rect", xmin = -250, xmax = 250, ymin = -47.5, ymax = 422.5, color = "black", fill = NA) +
+    # Set court limits to accurately reflect dimensions
+    coord_fixed(ratio = 1) +
+    xlim(-250, 250) +
+    ylim(-50, 460) +
+    # Adjust labels
+    annotate("text", x = 0, y = 455, label = as.character(year), size = 5, fontface = "bold", hjust = 0.5) +
+    theme_void()
+}
+```
+
+```{r}
+plt10 <- plot_shot_chart(jazz_10, 2010)
+plt10
+plt15 <- plot_shot_chart(jazz_15, 2015)
+plt20 <- plot_shot_chart(jazz_20, 2020)
+plt25 <- plot_shot_chart(jazz_25, 2025)
+plt25
+```
+
+```{r}
+library(cowplot)
+library(patchwork)
+
+legend <- get_legend(plt10)
+plt10 + plt15 + plt20 + plt25 + plot_layout(guides = "collect") + plot_annotation(title = "Utah Jazz shots over 15 years", theme = theme(plot.title = element_text(size = 17, face = "bold", hjust = 0.23)))
+```
+
+
