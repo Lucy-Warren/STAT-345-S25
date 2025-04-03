@@ -3,8 +3,8 @@ title: "STAT 345 Midterm Project"
 font: 12pt
 due: "Due April 4"
 output: 
-  pdf_document: default
-  word_document: default
+  #pdf_document: default
+  #word_document: default
   html_document: default
 ---
 
@@ -12,12 +12,12 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 library(devtools)
 devtools::install_github("abresler/nbastatR@aba9179ef644f263387c1536d6ddd26104d79cf4")
 ```
 
-```{r}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
 
 library(nbastatR)
@@ -27,18 +27,46 @@ jazz_20 <- teams_shots(teams = "Utah Jazz", seasons = 2020)
 jazz_25 <- teams_shots(teams = "Utah Jazz", seasons = 2025)
 ```
 
-```{r}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 library(ggplot2)
+library(dplyr)
 
 plot_shot_chart <- function(dat, year) {
-  ggplot(data = dat, aes(x = locationX, y = locationY)) +
-    geom_point(aes(color= isShotMade), size = 0.5, alpha = 0.3) +
-    scale_color_manual(name = NULL,
-                     values = c("TRUE" = "purple", "FALSE" = "skyblue"),
-                     labels = c("Make", "Miss")) +
-    guides(color = guide_legend(override.aes = list(size = 5, alpha = 1))) +
+  make_percentage <- round((sum(dat$isShotMade) / count(dat)) * 100)
+  
+  bins <- dat %>%
+    mutate(xbin = round(locationX / 10) * 10,
+           ybin = round(locationY / 10) * 10) %>%
+    group_by(xbin, ybin) %>%
+    summarize(total = n(),
+              made = sum(isShotMade),
+              .groups = "drop") %>%
+    mutate(ratio = made / total,
+           more_makes = made > (total / 2))
+  
+  ggplot() +
+    geom_tile(data = bins,
+              aes(x = xbin, y = ybin, fill = total),
+              width = 10, height = 10) +
+    scale_fill_gradient(name = "Shot Frequency", 
+                        trans = "log", 
+                        low = "skyblue", high = "purple",
+                        breaks = c(min(bins$total), max(bins$total)),
+                        labels = c("least", "most"),
+                        guide = guide_colorbar(direction = "horizontal",
+                                               title.position = "top",
+                                               barwidth = 8, barheight = 1)) +
+    
+    geom_point(data = bins %>% filter(more_makes),
+              aes(x = xbin, y = ybin, color = "More shots made than missed"),
+              size = 0.2, show.legend = TRUE) +
+    scale_color_manual(name = "", 
+                       values = c("More shots made than missed" = "yellow"),
+                       labels = c("More shots made\nthan missed"),
+                       guide = guide_legend(override.aes = list(size = 5))) +
+    
     # Hoop
-annotate("path", x = 7.5 * cos(seq(0, 2 * pi, length.out = 100)), 
+    annotate("path", x = 7.5 * cos(seq(0, 2 * pi, length.out = 100)), 
              y = 7.5 * sin(seq(0, 2 * pi, length.out = 100)), color = "black") +
     # Backboard
     annotate("segment", x = -30, xend = 30, y = -7.5, yend = -7.5, color = "black") +
@@ -65,26 +93,34 @@ annotate("path", x = 7.5 * cos(seq(0, 2 * pi, length.out = 100)),
     xlim(-250, 250) +
     ylim(-50, 460) +
     # Adjust labels
-    annotate("text", x = 0, y = 455, label = as.character(year), size = 5, fontface = "bold", hjust = 0.5) +
-    theme_void()
+    labs(title = as.character(year)) +
+    theme_void() +
+    theme(plot.title = element_text(face = "bold", hjust = 0.5)) +
+    annotate("text", x = 0, y = 457, label = paste0(as.character(make_percentage), "% made"), size = 3) 
 }
 ```
 
-```{r}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 plt10 <- plot_shot_chart(jazz_10, 2010)
-plt10
 plt15 <- plot_shot_chart(jazz_15, 2015)
 plt20 <- plot_shot_chart(jazz_20, 2020)
 plt25 <- plot_shot_chart(jazz_25, 2025)
-plt25
 ```
 
-```{r}
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
 library(cowplot)
 library(patchwork)
 
 legend <- get_legend(plt10)
-plt10 + plt15 + plt20 + plt25 + plot_layout(guides = "collect") + plot_annotation(title = "Utah Jazz shots over 15 years", theme = theme(plot.title = element_text(size = 17, face = "bold", hjust = 0.23)))
+final <- (plt10 + plt15 + plt20 + plt25) + 
+  plot_layout(guides = "collect") + 
+  plot_annotation(title = "Utah Jazz shots over 15 years", 
+                  theme = theme(plot.title = element_text(size = 17, face = "bold", hjust = 0.5)))
+print(final)
 ```
 
-
+### Observations:
+* Our shots used to be spread more evenly across the court
+* Shots are becoming increasingly concentrated in the three second area and around the three point line
+* The percentage of made shots has slightly decreased
+* Shots near the hoop are made more than missed
