@@ -3,13 +3,11 @@ title: "STAT 345 Midterm Project"
 font: 12pt
 due: "Due April 4"
 output: 
-  #pdf_document: default
-  #word_document: default
-  html_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
@@ -17,7 +15,7 @@ library(devtools)
 devtools::install_github("abresler/nbastatR@aba9179ef644f263387c1536d6ddd26104d79cf4")
 ```
 
-```{r, echo=FALSE, warning=FALSE, message=FALSE}
+```{r, echo=FALSE, warning=FALSE, message=FALSE, include=FALSE}
 Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
 
 library(nbastatR)
@@ -120,7 +118,25 @@ print(final)
 ```
 
 ### Observations:
-* Our shots used to be spread more evenly across the court
-* Shots are becoming increasingly concentrated in the three second area and around the three point line
+* Shots used to be spread more evenly across the court
+* Shots are now concentrated in the three-second area and around the three-point line
 * The percentage of made shots has slightly decreased
-* Shots near the hoop are made more than missed
+
+\newpage
+
+### An in-depth analysis:
+* Shots used to be spread more evenly across the court
+  * The 2010 chart has less white space, showing that shots were taken all over the court.
+  * The 2025 chart has more white space, meaning there were many more location on the court in which no shots were taken.
+  * The 2010 chart has less color variation, maintaining a mostly blue color throughout, showing the consistency in the frequency of shots being taken throughout the court.
+  * The 2025 chart has more color variation, with purple clusters surrounded by blue, showing how certain locations on the court had much higher frequencies of shots than others.
+* Shots are now concentrated in the three-second area and around the three-point line
+  * From chart 2010 to 2015 and to 2020, the intensity of the purple color, signifying high frequency, just beyond the three-point line increases, showing the progressive increase of shots near the line.
+  * From chart 2010 to 2015 and to 2020, the intensity of the purple color, signifying high frequency, in the three-second area increases, showing the progressive increase of shots in the zone.
+  * The 2020 and 2025 charts look very similar, suggesting that the patterns have remained fairly constant over the past several years.
+* The percentage of made shots has slightly decreased
+  * 49% of shots were made in 2010.
+  * This decreased to 45% in 2015 and stayed lower through 2025, where 46% were made.
+  * This suggests that the changing of shot locations hasn't necessarily led to a higher number of made shots.
+  
+  
