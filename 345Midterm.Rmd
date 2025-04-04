@@ -32,21 +32,21 @@ library(dplyr)
 
 # Function to build a shot chart for a set of shot data and a given year
 plot_shot_chart <- function(dat, year) {
-  # Calculate the total percentage of shots made
+  # STEP 1: Calculate the total percentage of shots made
   make_percentage <- round((sum(dat$isShotMade) / count(dat)) * 100)
   
-  # Separate data into 10x10 bins and calculate the make percentage for the bin
+  # STEP 2: Separate data into 10x10 bins and calculate the make percentage for the bin
   bins <- dat %>%
-    mutate(xbin = round(locationX / 10) * 10,
-           ybin = round(locationY / 10) * 10) %>%
-    group_by(xbin, ybin) %>%
-    summarize(total = n(),
-              made = sum(isShotMade),
+    mutate(xbin = round(locationX / 10) * 10, # Create x-bin by rounding locationX to the nearest 10
+           ybin = round(locationY / 10) * 10) %>% # Create y-bin by rounding locationY to the nearest 10
+    group_by(xbin, ybin) %>% # Group data by xbin and ybin
+    summarize(total = n(), # Count the total number of shots in each bin
+              made = sum(isShotMade), # Sum the shots made in each bin
               .groups = "drop") %>%
-    mutate(ratio = made / total,
-           more_makes = made > (total / 2))
+    mutate(ratio = made / total, # Calculate the percent of made shots in each bin
+           more_makes = made > (total / 2)) # Boolean value to flag whether a bin has more makes than misses
   
-  # Plot data
+  # STEP 3: Create the shot chart using ggplot2
   ggplot() +
     # Fill tiles on the plot with color based on frequency
     geom_tile(data = bins,
