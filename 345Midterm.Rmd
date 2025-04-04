@@ -19,6 +19,7 @@ devtools::install_github("abresler/nbastatR@aba9179ef644f263387c1536d6ddd26104d7
 Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 2)
 
 library(nbastatR)
+# Collect the shot data for the Utah Jazz from 2010, 2015, 2020, and 2025
 jazz_10 <- teams_shots(teams = "Utah Jazz", seasons = 2010)
 jazz_15 <- teams_shots(teams = "Utah Jazz", seasons = 2015)
 jazz_20 <- teams_shots(teams = "Utah Jazz", seasons = 2020)
@@ -29,9 +30,12 @@ jazz_25 <- teams_shots(teams = "Utah Jazz", seasons = 2025)
 library(ggplot2)
 library(dplyr)
 
+# Function to build a shot chart for a set of shot data and a given year
 plot_shot_chart <- function(dat, year) {
+  # Calculate the total percentage of shots made
   make_percentage <- round((sum(dat$isShotMade) / count(dat)) * 100)
   
+  # Separate data into 10x10 bins and calculate the make percentage for the bin
   bins <- dat %>%
     mutate(xbin = round(locationX / 10) * 10,
            ybin = round(locationY / 10) * 10) %>%
@@ -42,27 +46,32 @@ plot_shot_chart <- function(dat, year) {
     mutate(ratio = made / total,
            more_makes = made > (total / 2))
   
+  # Plot data
   ggplot() +
+    # Fill tiles on the plot with color based on frequency
     geom_tile(data = bins,
               aes(x = xbin, y = ybin, fill = total),
               width = 10, height = 10) +
     scale_fill_gradient(name = "Shot Frequency", 
-                        trans = "log", 
+                        trans = "log", # Scale the frequency by taking the log to increase the spread among smaller frequency values for better visualization
                         low = "skyblue", high = "purple",
-                        breaks = c(min(bins$total), max(bins$total)),
+                        breaks = c(min(bins$total), max(bins$total)), # Only label the ends of the legend
                         labels = c("least", "most"),
                         guide = guide_colorbar(direction = "horizontal",
                                                title.position = "top",
                                                barwidth = 8, barheight = 1)) +
     
+    # Add a dot in tiles where more shots were made than missed
     geom_point(data = bins %>% filter(more_makes),
               aes(x = xbin, y = ybin, color = "More shots made than missed"),
               size = 0.2, show.legend = TRUE) +
+    # Add a legend showing what the yellow dot symbolizes
     scale_color_manual(name = "", 
                        values = c("More shots made than missed" = "yellow"),
                        labels = c("More shots made\nthan missed"),
                        guide = guide_legend(override.aes = list(size = 5))) +
     
+    # Manually draw the lines of the court onto the chart
     # Hoop
     annotate("path", x = 7.5 * cos(seq(0, 2 * pi, length.out = 100)), 
              y = 7.5 * sin(seq(0, 2 * pi, length.out = 100)), color = "black") +
@@ -84,21 +93,30 @@ plot_shot_chart <- function(dat, year) {
     # Center circle
     annotate("path", x = 60 * cos(seq(0, pi, length.out = 100)), y = 422.5 + 60 * sin(seq(pi, 2*pi, length.out = 100)), color = "black") +
     annotate("path", x = 20 * cos(seq(0, pi, length.out = 100)), y = 422.5 + 20 * sin(seq(pi, 2*pi, length.out = 100)), color = "black") +
-    # Add the court boundary lines
+    # Court boundary lines
     annotate("rect", xmin = -250, xmax = 250, ymin = -47.5, ymax = 422.5, color = "black", fill = NA) +
+    
     # Set court limits to accurately reflect dimensions
     coord_fixed(ratio = 1) +
     xlim(-250, 250) +
     ylim(-50, 460) +
-    # Adjust labels
+    
+    # Add the year above the plot
     labs(title = as.character(year)) +
+    
+    # Clear the background of the chart and any existing excess features
     theme_void() +
+    
+    # Center the year
     theme(plot.title = element_text(face = "bold", hjust = 0.5)) +
+    
+    # Add the make percentage below the year
     annotate("text", x = 0, y = 457, label = paste0(as.character(make_percentage), "% made"), size = 3) 
 }
 ```
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# Make a plot for each of the years
 plt10 <- plot_shot_chart(jazz_10, 2010)
 plt15 <- plot_shot_chart(jazz_15, 2015)
 plt20 <- plot_shot_chart(jazz_20, 2020)
@@ -109,11 +127,15 @@ plt25 <- plot_shot_chart(jazz_25, 2025)
 library(cowplot)
 library(patchwork)
 
+# Extract the legend from one of the plots
 legend <- get_legend(plt10)
+
+# Add the plots into one graphic with a single legend
 final <- (plt10 + plt15 + plt20 + plt25) + 
   plot_layout(guides = "collect") + 
   plot_annotation(title = "Utah Jazz shots over 15 years", 
                   theme = theme(plot.title = element_text(size = 17, face = "bold", hjust = 0.5)))
+
 print(final)
 ```
 
@@ -124,15 +146,15 @@ print(final)
 
 \newpage
 
-### An in-depth analysis:
+### An more thorough analysis:
 * Shots used to be spread more evenly across the court
   * The 2010 chart has less white space, showing that shots were taken all over the court.
-  * The 2025 chart has more white space, meaning there were many more location on the court in which no shots were taken.
+  * The 2025 chart has more white space, meaning there were many more locations on the court where no shots were taken.
   * The 2010 chart has less color variation, maintaining a mostly blue color throughout, showing the consistency in the frequency of shots being taken throughout the court.
-  * The 2025 chart has more color variation, with purple clusters surrounded by blue, showing how certain locations on the court had much higher frequencies of shots than others.
+  * The 2025 chart has more color variation, with purple clusters surrounded by blue, showing how specific locations on the court had much higher frequencies of shots than others.
 * Shots are now concentrated in the three-second area and around the three-point line
-  * From chart 2010 to 2015 and to 2020, the intensity of the purple color, signifying high frequency, just beyond the three-point line increases, showing the progressive increase of shots near the line.
-  * From chart 2010 to 2015 and to 2020, the intensity of the purple color, signifying high frequency, in the three-second area increases, showing the progressive increase of shots in the zone.
+  * From chart 2010 to 2015 and 2020, the intensity of the purple color, signifying high frequency, just beyond the three-point line increases, showing the progressive increase of shots near the line.
+  * From chart 2010 to 2015 and 2020, the intensity of the purple color, signifying high frequency, in the three-second area increases, showing the progressive increase of shots in the zone.
   * The 2020 and 2025 charts look very similar, suggesting that the patterns have remained fairly constant over the past several years.
 * The percentage of made shots has slightly decreased
   * 49% of shots were made in 2010.
