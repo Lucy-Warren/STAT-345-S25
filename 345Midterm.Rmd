@@ -46,69 +46,56 @@ plot_shot_chart <- function(dat, year) {
     mutate(ratio = made / total, # Calculate the percent of made shots in each bin
            more_makes = made > (total / 2)) # Boolean value to flag whether a bin has more makes than misses
   
-  # STEP 3: Create the shot chart using ggplot2
+  # STEP 3: Create the shot chart
   ggplot() +
-    # Fill tiles on the plot with color based on frequency
+    # Fill the bins as tiles with color representing shot frequency
     geom_tile(data = bins,
               aes(x = xbin, y = ybin, fill = total),
               width = 10, height = 10) +
     scale_fill_gradient(name = "Shot Frequency", 
-                        trans = "log", # Scale the frequency by taking the log to increase the spread among smaller frequency values for better visualization
+                        trans = "log", # Log-transform the frequency to increase the spread among smaller frequency values for better visualization
                         low = "skyblue", high = "purple",
-                        breaks = c(min(bins$total), max(bins$total)), # Only label the ends of the legend
+                        breaks = c(min(bins$total), max(bins$total)), # Only label the minimum and maximum values of the legend
                         labels = c("least", "most"),
                         guide = guide_colorbar(direction = "horizontal",
                                                title.position = "top",
                                                barwidth = 8, barheight = 1)) +
     
-    # Add a dot in tiles where more shots were made than missed
-    geom_point(data = bins %>% filter(more_makes),
+    # Add a dot on tiles where more shots were made than missed
+    geom_point(data = bins %>% filter(more_makes), # Filter bins where more shots were made than missed
               aes(x = xbin, y = ybin, color = "More shots made than missed"),
               size = 0.2, show.legend = TRUE) +
-    # Add a legend showing what the yellow dot symbolizes
+    # Adjust the legend
     scale_color_manual(name = "", 
                        values = c("More shots made than missed" = "yellow"),
                        labels = c("More shots made\nthan missed"),
                        guide = guide_legend(override.aes = list(size = 5))) +
     
-    # Manually draw the lines of the court onto the chart
-    # Hoop
+    # STEP 4: Draw the lines of the court onto the chart
     annotate("path", x = 7.5 * cos(seq(0, 2 * pi, length.out = 100)), 
-             y = 7.5 * sin(seq(0, 2 * pi, length.out = 100)), color = "black") +
-    # Backboard
-    annotate("segment", x = -30, xend = 30, y = -7.5, yend = -7.5, color = "black") +
-    # Outer box (paint)
-    annotate("rect", xmin = -80, xmax = 80, ymin = -47.5, ymax = 142.5, color = "black", fill = NA) +
-    # Inner box (paint)
-    annotate("rect", xmin = -60, xmax = 60, ymin = -47.5, ymax = 142.5, color = "black", fill = NA) +
-    # Free throw arcs
-    annotate("path", x = 60 * cos(seq(0, pi, length.out = 100)), y = 142.5 + 60 * sin(seq(0, pi, length.out = 100)), color = "black") +
-    annotate("path", x = 60 * cos(seq(pi, 2 * pi, length.out = 100)), y = 142.5 + 60 * sin(seq(pi, 2 * pi, length.out = 100)), color = "black", linetype = "dashed") +
-    # Restricted arc
-    annotate("path", x = 40 * cos(seq(0, pi, length.out = 100)), y = 40 * sin(seq(0, pi, length.out = 100)), color = "black") +
-    # Three-point line
-    annotate("segment", x = -220, xend = -220, y = -47.5, yend = 92.5, color = "black") +
-    annotate("segment", x = 220, xend = 220, y = -47.5, yend = 92.5, color = "black") +
-    annotate("path", x = 237.5 * cos(seq(22 * pi / 180, 158 * pi / 180, length.out = 100)), y = 237.5 * sin(seq(22 * pi / 180, 158 * pi / 180, length.out = 100)), color = "black") +
-    # Center circle
-    annotate("path", x = 60 * cos(seq(0, pi, length.out = 100)), y = 422.5 + 60 * sin(seq(pi, 2*pi, length.out = 100)), color = "black") +
-    annotate("path", x = 20 * cos(seq(0, pi, length.out = 100)), y = 422.5 + 20 * sin(seq(pi, 2*pi, length.out = 100)), color = "black") +
-    # Court boundary lines
-    annotate("rect", xmin = -250, xmax = 250, ymin = -47.5, ymax = 422.5, color = "black", fill = NA) +
+             y = 7.5 * sin(seq(0, 2 * pi, length.out = 100)), color = "black") + # Hoop
+    annotate("segment", x = -30, xend = 30, y = -7.5, yend = -7.5, color = "black") + # Backboard
+    annotate("rect", xmin = -80, xmax = 80, ymin = -47.5, ymax = 142.5, color = "black", fill = NA) + # Outer box
+    annotate("rect", xmin = -60, xmax = 60, ymin = -47.5, ymax = 142.5, color = "black", fill = NA) + # Inner box
+    annotate("path", x = 60 * cos(seq(0, pi, length.out = 100)), y = 142.5 + 60 * sin(seq(0, pi, length.out = 100)), color = "black") + # Free throw arc
+    annotate("path", x = 60 * cos(seq(pi, 2 * pi, length.out = 100)), y = 142.5 + 60 * sin(seq(pi, 2 * pi, length.out = 100)), color = "black", linetype = "dashed") + # Dashed free throw arc
+    annotate("path", x = 40 * cos(seq(0, pi, length.out = 100)), y = 40 * sin(seq(0, pi, length.out = 100)), color = "black") + # Restricted arc
+    annotate("segment", x = -220, xend = -220, y = -47.5, yend = 92.5, color = "black") + # Left three-point line
+    annotate("segment", x = 220, xend = 220, y = -47.5, yend = 92.5, color = "black") + # Right three-point line
+    annotate("path", x = 237.5 * cos(seq(22 * pi / 180, 158 * pi / 180, length.out = 100)), y = 237.5 * sin(seq(22 * pi / 180, 158 * pi / 180, length.out = 100)), color = "black") + # Three point arc
+    annotate("path", x = 60 * cos(seq(0, pi, length.out = 100)), y = 422.5 + 60 * sin(seq(pi, 2*pi, length.out = 100)), color = "black") + # Outer center circle
+    annotate("path", x = 20 * cos(seq(0, pi, length.out = 100)), y = 422.5 + 20 * sin(seq(pi, 2*pi, length.out = 100)), color = "black") + # Inner center circle
+    annotate("rect", xmin = -250, xmax = 250, ymin = -47.5, ymax = 422.5, color = "black", fill = NA) + # Court boundary
     
-    # Set court limits to accurately reflect dimensions
+    # STEP 5: Adjust court appearance
     coord_fixed(ratio = 1) +
     xlim(-250, 250) +
     ylim(-50, 460) +
     
-    # Add the year above the plot
-    labs(title = as.character(year)) +
-    
-    # Clear the background of the chart and any existing excess features
-    theme_void() +
-    
-    # Center the year
-    theme(plot.title = element_text(face = "bold", hjust = 0.5)) +
+    # STEP 6: Add year and make percentage labels
+    labs(title = as.character(year)) + # Use the year as the plot title
+    theme_void() + # Remove grid lines and the background
+    theme(plot.title = element_text(face = "bold", hjust = 0.5)) + # Bold and center the year
     
     # Add the make percentage below the year
     annotate("text", x = 0, y = 457, label = paste0(as.character(make_percentage), "% made"), size = 3) 
@@ -116,7 +103,7 @@ plot_shot_chart <- function(dat, year) {
 ```
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
-# Make a plot for each of the years
+# STEP 7: Plot charts for each year
 plt10 <- plot_shot_chart(jazz_10, 2010)
 plt15 <- plot_shot_chart(jazz_15, 2015)
 plt20 <- plot_shot_chart(jazz_20, 2020)
@@ -124,18 +111,20 @@ plt25 <- plot_shot_chart(jazz_25, 2025)
 ```
 
 ```{r, echo=FALSE, warning=FALSE, message=FALSE}
+# STEP 8: Combine the plots into a single graphic
 library(cowplot)
 library(patchwork)
 
 # Extract the legend from one of the plots
 legend <- get_legend(plt10)
 
-# Add the plots into one graphic with a single legend
+# Add the plots into one graphic with a shared legend
 final <- (plt10 + plt15 + plt20 + plt25) + 
-  plot_layout(guides = "collect") + 
+  plot_layout(guides = "collect") + # Collect the legends from all the plots
   plot_annotation(title = "Utah Jazz shots over 15 years", 
-                  theme = theme(plot.title = element_text(size = 17, face = "bold", hjust = 0.5)))
+                  theme = theme(plot.title = element_text(size = 17, face = "bold", hjust = 0.5))) # Add a title
 
+# Print the combined plot
 print(final)
 ```
 
@@ -161,4 +150,57 @@ print(final)
   * This decreased to 45% in 2015 and stayed lower through 2025, where 46% were made.
   * This suggests that the changing of shot locations hasn't necessarily led to a higher number of made shots.
   
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+jazz <- rbind(jazz_10, jazz_15, jazz_20, jazz_25)
+
+library(ggplot2)
+library(dplyr)
+
+# Separate data into 10x10 bins and calculate make percentages
+bins <- jazz %>%
+  mutate(xbin = round(locationX / 10) * 10, # Create x-bin by rounding locationX to the nearest 10
+         ybin = round(locationY / 10) * 10) %>% # Create y-bin by rounding locationY to the nearest 10
+  group_by(xbin, ybin) %>% # Group data by xbin and ybin
+  summarize(total = n(), # Count the total number of shots in each bin
+            made = sum(isShotMade), # Sum the shots made in each bin
+            .groups = "drop") %>%
+  mutate(ratio = made / total) # Calculate the percent of made shots
+
+# Create the shot chart
+ggplot() +
+  # Fill the bins as tiles with color representing shot frequency
+  geom_tile(data = bins %>% filter(ratio < 0.20), # Filter bins with less than 25% made shots
+            aes(x = xbin, y = ybin, fill = total),
+            width = 10, height = 10) +
+  scale_fill_gradient(name = "Frequency",
+                      low = "pink", high = "red") +
+  # Draw the lines of the court onto the chart
+  annotate("path", x = 7.5 * cos(seq(0, 2 * pi, length.out = 100)), 
+           y = 7.5 * sin(seq(0, 2 * pi, length.out = 100)), color = "black") + # Hoop
+  annotate("segment", x = -30, xend = 30, y = -7.5, yend = -7.5, color = "black") + # Backboard
+  annotate("rect", xmin = -80, xmax = 80, ymin = -47.5, ymax = 142.5, color = "black", fill = NA) + # Outer box
+  annotate("rect", xmin = -60, xmax = 60, ymin = -47.5, ymax = 142.5, color = "black", fill = NA) + # Inner box
+  annotate("path", x = 60 * cos(seq(0, pi, length.out = 100)), y = 142.5 + 60 * sin(seq(0, pi, length.out = 100)), color = "black") + # Free throw arc
+  annotate("path", x = 60 * cos(seq(pi, 2 * pi, length.out = 100)), y = 142.5 + 60 * sin(seq(pi, 2 * pi, length.out = 100)), color = "black", linetype = "dashed") + # Dashed free throw arc
+  annotate("path", x = 40 * cos(seq(0, pi, length.out = 100)), y = 40 * sin(seq(0, pi, length.out = 100)), color = "black") + # Restricted arc
+  annotate("segment", x = -220, xend = -220, y = -47.5, yend = 92.5, color = "black") + # Left three-point line
+  annotate("segment", x = 220, xend = 220, y = -47.5, yend = 92.5, color = "black") + # Right three-point line
+  annotate("path", x = 275 * cos(seq(22 * pi / 180, 158 * pi / 180, length.out = 100)), y = 275 * sin(seq(22 * pi / 180, 158 * pi / 180, length.out = 100)), color = "green", size = 1) + # Suggested 4-point line
+  annotate("path", x = 237.5 * cos(seq(22 * pi / 180, 158 * pi / 180, length.out = 100)), y = 237.5 * sin(seq(22 * pi / 180, 158 * pi / 180, length.out = 100)), color = "black") + # Three point arc
+  annotate("path", x = 60 * cos(seq(0, pi, length.out = 100)), y = 422.5 + 60 * sin(seq(pi, 2*pi, length.out = 100)), color = "black") + # Outer center circle
+  annotate("path", x = 20 * cos(seq(0, pi, length.out = 100)), y = 422.5 + 20 * sin(seq(pi, 2*pi, length.out = 100)), color = "black") + # Inner center circle
+  annotate("rect", xmin = -250, xmax = 250, ymin = -47.5, ymax = 422.5, color = "black", fill = NA) + # Court boundary
   
+  # Adjust court appearance
+  coord_fixed(ratio = 1) +
+  xlim(-250, 250) +
+  ylim(-50, 460) +
+  
+  # Add a title
+  labs(title = "2010-2025 Shot Locations Made Less Than 25%") + # Set title
+  theme_void() + # Remove grid lines and the background
+  theme(plot.title = element_text(face = "bold", hjust = 0.5)) # Bold and center the title
+```
+
+  If the NBA were to incorporate a 4-point shot, I would suggest that the arc be a third of the distance from the 3-point arc to the center circle, similar to where the green arc is drawn on the plot. The plot shows locations on the court where, across 2010, 2015, 2020, and 2025, less than 20 percent of shots were made. All of the tiles beyond this line are pink, meaning they did not occur very frequently. I believe this line is therefore a good option for a 4-point line because it is proven to be difficult to make shots beyond it and players do not shoot from points beyond it all that often. A 4-point shot needs to be earned and shots made beyond this line would be appropriate to gift 4 points.
+  A potential consequence of introducing a 4-point shot is that teams would quickly adjust to go for these shots more often. With enough training, players could improve their ability to make shots from this new line, making the frequency of made shots at this distance increase dramatically. This could lead to a 4-point shot becoming common and less exciting. A key feature of such a shot should be that they aren't made all that often, so players mastering this shot would defeat the purpose of introducing it. 
